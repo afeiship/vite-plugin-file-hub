@@ -1,3 +1,4 @@
+import vitePlugin from '../src';
 import { deriveKey } from '../src/keyfn';
 import { commonRoot, generateModule } from '../src/codegen';
 
@@ -117,5 +118,79 @@ describe('generateModule', () => {
       'import.meta.glob(["/src/widgets/*.tsx","!/src/widgets/**/draft.tsx"], { eager: true })',
     );
     expect(code).toContain('toMap(widgetsFiles, "/src/widgets/", deriveKey)');
+  });
+});
+
+describe('vitePlugin', () => {
+  test('returns plugin object with name and hooks', () => {
+    const plugin = vitePlugin({ groups: { widgets: { globs: '/src/widgets/*.tsx' } } });
+    expect(plugin.name).toBe('vite-plugin-file-hub');
+    expect(typeof plugin.resolveId).toBe('function');
+    expect(typeof plugin.load).toBe('function');
+  });
+
+  test('throws without groups', () => {
+    expect(() => (vitePlugin as any)({})).toThrow('options.groups is required');
+  });
+
+  test('throws on empty groups object', () => {
+    expect(() => (vitePlugin as any)({ groups: {} })).toThrow('options.groups is required');
+  });
+
+  test('throws when a group has no globs', () => {
+    expect(() => (vitePlugin as any)({ groups: { widgets: {} } })).toThrow('requires globs');
+  });
+
+  test('throws on group name that is not a JS identifier', () => {
+    expect(() => (vitePlugin as any)({ groups: { 'my-group': { globs: '/src/*.tsx' } } })).toThrow(
+      'invalid group name',
+    );
+  });
+
+  test('resolveId hits virtual:file-hub and misses others', () => {
+    const plugin = vitePlugin({ groups: { widgets: { globs: '/src/widgets/*.tsx' } } });
+    const resolveId = plugin.resolveId as any;
+    expect(resolveId.call({} as any, 'virtual:file-hub')).toBe('\0virtual:file-hub');
+    expect(resolveId.call({} as any, 'other-module')).toBeUndefined();
+  });
+
+  test('resolveId honors a custom id', () => {
+    const plugin = vitePlugin({
+      groups: { widgets: { globs: '/src/*.tsx' } },
+      id: 'virtual:my-hub',
+    });
+    const resolveId = plugin.resolveId as any;
+    expect(resolveId.call({} as any, 'virtual:my-hub')).toBe('\0virtual:my-hub');
+    expect(resolveId.call({} as any, 'virtual:file-hub')).toBeUndefined();
+  });
+
+  test('load emits multi-group module with modes and roots', () => {
+    const plugin = vitePlugin({
+      groups: {
+        locales: { globs: '/src/locales/*.json', mode: 'raw' },
+        widgets: { globs: ['/src/widgets/*.tsx', '!/src/widgets/**/draft.tsx'] },
+      },
+    });
+    const load = plugin.load as any;
+    const code = load.call({} as any, '\0virtual:file-hub');
+    expect(code).toContain(
+      "const localesFiles = import.meta.glob([\"/src/locales/*.json\"], { eager: true, query: '?raw', import: 'default' })",
+    );
+    expect(code).toContain(
+      'import.meta.glob(["/src/widgets/*.tsx","!/src/widgets/**/draft.tsx"], { eager: true })',
+    );
+    expect(code).toContain('export const locales = toMap(localesFiles, "/src/locales/", deriveKey)');
+    expect(code).toContain('export const widgets = toMap(widgetsFiles, "/src/widgets/", deriveKey)');
+    expect(code).toContain('export default { locales, widgets };');
+  });
+
+  test('load misses foreign ids', () => {
+    const plugin = vitePlugin({ groups: { widgets: { globs: '/src/*.tsx' } } });
+    const load = plugin.load as any;
+    expect(load.call({} as any, '\0some-other-module')).toBeUndefined();
+  });
+
+  test('default export shape: factory function', () => {
+    expect(typeof vitePlugin).toBe('function');
   });
 });
