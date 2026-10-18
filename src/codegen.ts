@@ -19,3 +19,31 @@ export const commonRoot = (patterns: string[]): string => {
   const idx = prefix.lastIndexOf('/');
   return idx <= 0 ? '/' : prefix.slice(0, idx + 1);
 };
+
+import { buildModule, type GroupSpec } from './template';
+
+export interface GenerateModuleGroupOptions {
+  /** Glob patterns (already normalized to array). */
+  globs: string[];
+  /** Export form. */
+  mode?: 'module' | 'raw';
+}
+
+export interface GenerateModuleOptions {
+  /** Normalized groups keyed by export name. */
+  groups: Record<string, GenerateModuleGroupOptions>;
+}
+
+/**
+ * Generate the source of the virtual module.
+ * @param options - Normalized plugin options (globs already arrays)
+ */
+export const generateModule = (options: GenerateModuleOptions): string => {
+  const specs: GroupSpec[] = Object.entries(options.groups).map(([name, group]) => ({
+    name,
+    globs: group.globs,
+    root: commonRoot(group.globs),
+    raw: group.mode === 'raw',
+  }));
+  return buildModule(specs);
+};
