@@ -71,16 +71,16 @@ declare module 'virtual:file-hub' {
 | `mode` | `'module' \| 'raw'` | `'module'` | `module` = ES module imports, `raw` = content as string |
 
 ## license
-Code released under [the MIT license](https://github.com/afeiship/vite-plugin-file-hub/blob/master/LICENSE.txt).
+Code released under [the MIT license](https://github.com/afeiship/vite-plugin-file-hub/blob/main/LICENSE.txt).
 
 [version-image]: https://img.shields.io/npm/v/@jswork/vite-plugin-file-hub
 [version-url]: https://npmjs.org/package/@jswork/vite-plugin-file-hub
 
 [license-image]: https://img.shields.io/npm/l/@jswork/vite-plugin-file-hub
-[license-url]: https://github.com/afeiship/vite-plugin-file-hub/blob/master/LICENSE.txt
+[license-url]: https://github.com/afeiship/vite-plugin-file-hub/blob/main/LICENSE.txt
 
 [size-image]: https://img.shields.io/bundlephobia/minzip/@jswork/vite-plugin-file-hub
-[size-url]: https://github.com/afeiship/vite-plugin-file-hub/blob/master/dist/index.min.js
+[size-url]: https://github.com/afeiship/vite-plugin-file-hub/blob/main/dist/index.min.js
 
 [download-image]: https://img.shields.io/npm/dm/@jswork/vite-plugin-file-hub
 [download-url]: https://www.npmjs.com/package/@jswork/vite-plugin-file-hub
